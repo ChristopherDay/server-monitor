@@ -15,11 +15,3 @@ A very basic and simple server monitor
 5) run `node app`
 
 6) In your web browser go to 127.0.0.1:8080
-
-## How to keep it running
-
-1) Using the command line (or powershell for windows) navigate to this repository
-
-2) run `npm install pm2 --g`
-
-3) run `pm2 start app`
