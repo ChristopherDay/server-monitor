@@ -3,6 +3,56 @@
 		<link href="style.css" rel="stylesheet" />
 	</head>
 	<body>
+		
+		<div class="new-host-modal modal">
+			<div class="modal-background"></div>
+			<div class="modal-card" style="margin-top: 100px">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Monitor a new host</p>
+					<button class="delete close-modal" aria-label="close"></button>
+				</header>
+				<section class="modal-card-body">
+					<div class="field">
+						<div class="control">
+							<input class="input new-host" type="text" placeholder="Hostname or IP address"/>
+						</div>
+					</div>
+					<div class="field">
+						<div class="control">
+							<label class="checkbox">
+								<input type="checkbox" class="monitor-windows-meta-data">
+								Monitor windows meta data
+							</label>
+						</div>
+					</div>
+
+					<div class="windows-login-details">
+						<em>Warning! the username and passwords are stored in plain text!</em>
+						<div class="columns">	
+							<div class="column">
+								<div class="field">
+									<div class="control">
+										<input class="input windows-username" type="text" placeholder="Username"/>
+									</div>
+								</div>
+							</div>
+							<div class="column">
+								<div class="field">
+									<div class="control">
+										<input class="input windows-password" type="password" placeholder="Password"/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</section>
+				<footer class="modal-card-foot">
+					<button class="button save-new-host is-success">Save changes</button>
+					<button class="button close-modal">Cancel</button>
+				</footer>
+			</div>
+		</div>
 
 		<div class="panel">
 			<div class="panel-heading">
@@ -11,17 +61,13 @@
 					Starting up...
 				</div>
 			</div>
-			<div class="panel-block">
-				<p class="control">
-					<input class="input new-host" type="text" placeholder="New host"/>
-				</p>
-			</div>
 			<div class="panel-block hostnames">
 				<table class="table is-narrow is-fullwidth">
 					<tr><td><em>Loading ... </em></td></tr>
 				</table>
 			</div>
 		</div>
+
 
 		<script src="jquery.js"></script>
 		<script src="socket.io.js"></script>
@@ -30,14 +76,18 @@
 
 			socket.on("connect", function () {
 				$(".panel-heading .tag")
-					.attr("class", "tag is-success is-pulled-right")
-					.text("Connected")
+					.attr("class", "tag is-link is-pulled-right")
+					.text("Add a new host")
+					.bind("click", function () {
+						$(".new-host-modal").fadeIn(100);
+					});
 			});
 
 			socket.on("disconnect", function () {
 				$(".panel-heading .tag")
 					.attr("class", "tag is-danger is-pulled-right")
 					.text("Disconnected")
+					.unbind();
 				$(".hostnames table").html("");
 			});
 
@@ -60,16 +110,30 @@
 				}
 			});
 
-			$(".new-host").keypress(function(e) {
-				if(e.which == 13) {
-					socket.emit("newHost", {
-						hostname: $(this).val()
-					});
-					$(this).val("");
-				}
+			$(".close-modal").bind("click", function () {
+				$(".new-host-modal").fadeOut(100);
 			});
 
+			$(".save-new-host").bind("click", function(e) {
+				socket.emit("newHost", {
+					hostname: $(".new-host").val(), 
+					windows: $(".monitor-windows-meta-data").prop("checked"), 
+					username: $(".windows-username").val(),
+					password: $(".windows-password").val()
+				});
+				$(".close-modal").eq(0).click();
+				$(".windows-username").val("");
+				$(".windows-password").val("");
+				$(".new-host").val("");
+			});
 
+			$(".monitor-windows-meta-data").bind("change", function () {
+				if ($(this).prop("checked")) {
+					$(".windows-login-details").show();
+				} else {
+					$(".windows-login-details").hide();
+				}
+			}).trigger("change");
 
 		</script>
 	</body>
