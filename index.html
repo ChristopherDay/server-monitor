@@ -1,0 +1,76 @@
+<html>
+	<head>
+		<link href="style.css" rel="stylesheet" />
+	</head>
+	<body>
+
+		<div class="panel">
+			<div class="panel-heading">
+				Hosts
+				<div class="tag is-info is-pulled-right">
+					Starting up...
+				</div>
+			</div>
+			<div class="panel-block">
+				<p class="control">
+					<input class="input new-host" type="text" placeholder="New host"/>
+				</p>
+			</div>
+			<div class="panel-block hostnames">
+				<table class="table is-narrow is-fullwidth">
+					<tr><td><em>Loading ... </em></td></tr>
+				</table>
+			</div>
+		</div>
+
+		<script src="jquery.js"></script>
+		<script src="socket.io.js"></script>
+		<script>
+			var socket = io(":8181");
+
+			socket.on("connect", function () {
+				$(".panel-heading .tag")
+					.attr("class", "tag is-success is-pulled-right")
+					.text("Connected")
+			});
+
+			socket.on("disconnect", function () {
+				$(".panel-heading .tag")
+					.attr("class", "tag is-danger is-pulled-right")
+					.text("Disconnected")
+				$(".hostnames table").html("");
+			});
+
+			socket.on("pings", function (data) {
+				if (!data.length) {
+					$(".hostnames table").html("<tr><td><em>No hosts</em></td></tr>");
+				} else {
+					$(".hostnames table").html("");
+					for (var i = 0; i < data.length; i++) {
+						var host = data[i];
+						var html = '<tr><td width="70px">';
+						if (host.online) {
+							html += '<span class="tag is-success">Online</span>';
+						} else {
+							html += '<span class="tag is-danger">Offline</span>';
+						}
+						html += '</td><td>' + host.hostname + '</td></tr>';
+						$(".hostnames table").append(html);					
+					}
+				}
+			});
+
+			$(".new-host").keypress(function(e) {
+				if(e.which == 13) {
+					socket.emit("newHost", {
+						hostname: $(this).val()
+					});
+					$(this).val("");
+				}
+			});
+
+
+
+		</script>
+	</body>
+</html>
