@@ -3,8 +3,9 @@ var ping = require("ping");
 var config = require("./lib/config");
 var server = require("./lib/http");
 var socket = require("./lib/socket");
+var dns = require("./lib/dnsLookup");
 
-setInterval(() => {
+var pingHosts = (updateDNS) => {	
 	db.hosts.find().forEach((host) => {
 		let pingTime = new Date().valueOf();
 		ping.sys.probe(host.hostname, (isAlive) => {
@@ -13,12 +14,39 @@ setInterval(() => {
 				options.lastOnline = new Date().valueOf();
 				options.pingTime = options.lastOnline - pingTime;
 			}
-			db.hosts.update({
-				id: host.id
-			}, options);
+
+			if (updateDNS) {
+				console.log("updateDNS", updateDNS);
+				dns(host.hostname, (ip) => {
+					if (ip) options.ip = ip;
+					db.hosts.update({
+						_id: host._id
+					}, options);
+				});
+			} else {
+				db.hosts.update({
+					_id: host._id
+				}, options);
+			}
+
 		});
 	});
-	socket.emit("pings", db.hosts.find().filter((r)=> { 
-		delete r._id; return r; 
-	}));
+	socket.emit("hostChange", db.hosts.find());
+}
+
+setInterval(() => {
+	pingHosts();	
 }, config.pingInterval);
+
+setInterval(() => { 
+	pingHosts(true); 
+}, config.updateDNS);
+
+socket.on("connection", (client) => {
+	client.emit("hostChange", db.hosts.find());
+	client.on("updateIPs", ()=> {
+		pingHosts(true);
+	});
+});
+
+pingHosts(true);

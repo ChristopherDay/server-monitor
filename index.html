@@ -14,6 +14,11 @@
 				<section class="modal-card-body">
 					<div class="field">
 						<div class="control">
+							<input class="input new-host-display-name" type="text" placeholder="Display name (if blank it will be the hostname)"/>
+						</div>
+					</div>
+					<div class="field">
+						<div class="control">
 							<input class="input new-host" type="text" placeholder="Hostname or IP address"/>
 						</div>
 					</div>
@@ -72,7 +77,7 @@
 		<script src="jquery.js"></script>
 		<script src="socket.io.js"></script>
 		<script>
-			var socket = io(":8181");
+			var socket = io(":{{SOCKET_PORT}}");
 
 			socket.on("connect", function () {
 				$(".panel-heading .tag")
@@ -91,7 +96,7 @@
 				$(".hostnames table").html("");
 			});
 
-			socket.on("pings", function (data) {
+			socket.on("hostChange", function (data) {
 				if (!data.length) {
 					$(".hostnames table").html("<tr><td><em>No hosts</em></td></tr>");
 				} else {
@@ -99,12 +104,14 @@
 					for (var i = 0; i < data.length; i++) {
 						var host = data[i];
 						var html = '<tr><td width="70px">';
-						if (host.online) {
+						if (host.online == undefined) {
+							html += '<span class="tag is-light">Waiting</span>';
+						} else if (host.online) {
 							html += '<span class="tag is-success">Online</span>';
 						} else {
 							html += '<span class="tag is-danger">Offline</span>';
 						}
-						html += '</td><td>' + host.hostname + '</td></tr>';
+						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td></tr>';
 						$(".hostnames table").append(html);					
 					}
 				}
@@ -116,15 +123,14 @@
 
 			$(".save-new-host").bind("click", function(e) {
 				socket.emit("newHost", {
+					name: $(".new-host-display-name").val(), 
 					hostname: $(".new-host").val(), 
 					windows: $(".monitor-windows-meta-data").prop("checked"), 
 					username: $(".windows-username").val(),
 					password: $(".windows-password").val()
 				});
 				$(".close-modal").eq(0).click();
-				$(".windows-username").val("");
-				$(".windows-password").val("");
-				$(".new-host").val("");
+				$(".windows-username, .windows-password, .new-host, .new-host-display-name").val("");
 			});
 
 			$(".monitor-windows-meta-data").bind("change", function () {
