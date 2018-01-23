@@ -1,0 +1,11 @@
+<div class="panel">
+	<div class="panel-heading">
+		Hosts
+	</div>
+	<div *ngFor="let host of hosts; let i = index" class="panel-block hosts">
+		<span *ngIf="host.online === null" class="tag is-warning">Waiting</span>
+		<span *ngIf="host.online === true" class="tag is-success">Online</span>
+		<span *ngIf="host.online === false" class="tag is-danger">Offline</span>
+		{{host.hostname}}
+	</div>
+</div>
