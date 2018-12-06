@@ -101,6 +101,7 @@
 					$(".hostnames table").html("<tr><td><em>No hosts</em></td></tr>");
 				} else {
 					$(".hostnames table").html("");
+
 					for (var i = 0; i < data.length; i++) {
 						var host = data[i];
 						var html = '<tr><td width="70px">';
@@ -111,9 +112,20 @@
 						} else {
 							html += '<span class="tag is-danger">Offline</span>';
 						}
-						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td></tr>';
+						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td><td width="100px"><a data-id="'+host._id+'">Remove</a></td></tr>';
 						$(".hostnames table").append(html);					
 					}
+
+					$("[data-id]").bind("click", function(e) {
+						var r = confirm("Click OK if you want to delete this host");
+						if (r) {
+							var id = $(this).attr("data-id");
+							socket.emit("deleteHost", {
+								id: id
+							});
+						}
+					});
+
 				}
 			});
 
