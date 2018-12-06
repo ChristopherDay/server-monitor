@@ -110,7 +110,11 @@
 						} else if (host.online) {
 							html += '<span class="tag is-success">Online</span>';
 						} else {
-							html += '<span class="tag is-danger">Offline</span>';
+							if (host.failedTrys > 5) {
+								html += '<span class="tag is-danger">Offline</span>';
+							} else {
+								html += '<span class="tag is-warning">Trying</span>';
+							}
 						}
 						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td><td width="100px"><a data-id="'+host._id+'">Remove</a></td></tr>';
 						$(".hostnames table").append(html);					

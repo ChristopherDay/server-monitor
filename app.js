@@ -10,9 +10,14 @@ var pingHosts = (updateDNS) => {
 		let pingTime = new Date().valueOf();
 		ping.sys.probe(host.hostname, (isAlive) => {
 			let options = { online: isAlive, lastCheck: new Date().valueOf() };
+
 			if (isAlive) {
 				options.lastOnline = new Date().valueOf();
 				options.pingTime = options.lastOnline - pingTime;
+				options.failedTrys = 0;
+			} else {
+				options.failedTrys = host.failedTrys + 1;
+				console.log(host.hostname, options.failedTrys);
 			}
 
 			if (updateDNS) {
