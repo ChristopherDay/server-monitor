@@ -105,9 +105,6 @@
 					$(".hostnames table").html("");
 
 					for (var i = 0; i < data.length; i++) {
-						
-						if (data[i].online) continue;
-
 						var host = data[i];
 						var html = '<tr><td width="70px">';
 						if (host.online == undefined) {
@@ -116,9 +113,9 @@
 							html += '<span class="tag is-success">Online</span>';
 						} else {
 							if (host.failedTrys > 5) {
-								html += '<span class="tag is-danger">Offline '+(host.lastOnline?moment(host.lastOnline).fromNow():"")+' </span>';
+								html += '<span class="tag is-danger">Offline ' + (host.lastOnline?moment(host.lastOnline).fromNow():"") + ' </span>';
 							} else {
-								html += '<span class="tag is-warning">Trying ('+host.failedTrys+')</span>';
+								html += '<span class="tag is-warning">Trying</span>';
 							}
 						}
 						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td><td width="100px"><a data-id="'+host._id+'">Remove</a></td></tr>';
