@@ -1,14 +1,15 @@
 <html>
 	<head>
 		<link href="style.css" rel="stylesheet" />
+		<link href="css/icons.css" rel="stylesheet" />
 	</head>
-	<body>
+	<body class="is-desktop">
 		
 		<div class="new-host-modal modal">
 			<div class="modal-background"></div>
 			<div class="modal-card" style="margin-top: 100px">
 				<header class="modal-card-head">
-					<p class="modal-card-title">Monitor a new host</p>
+					<p class="modal-card-title">Edit host</p>
 					<button class="delete close-modal" aria-label="close"></button>
 				</header>
 				<section class="modal-card-body">
@@ -22,38 +23,37 @@
 							<input class="input new-host" type="text" placeholder="Hostname or IP address"/>
 						</div>
 					</div>
+
+				</section>
+				<footer class="modal-card-foot">
+					<button class="button save-new-host is-success">Save changes</button>
+					<button class="button close-modal">Cancel</button>
+				</footer>
+			</div>
+		</div>		
+		<div class="edit-host-modal modal">
+			<div class="modal-background"></div>
+			<div class="modal-card" style="margin-top: 100px">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Monitor a new host</p>
+					<button class="delete close-modal" aria-label="close"></button>
+				</header>
+				<section class="modal-card-body">
 					<div class="field">
 						<div class="control">
-							<label class="checkbox">
-								<input type="checkbox" class="monitor-windows-meta-data">
-								Monitor windows meta data
-							</label>
+							<input class="input edit-host-display-name" type="text" placeholder="Display name (if blank it will be the hostname)"/>
 						</div>
 					</div>
-
-					<div class="windows-login-details">
-						<em>Warning! the username and passwords are stored in plain text!</em>
-						<div class="columns">	
-							<div class="column">
-								<div class="field">
-									<div class="control">
-										<input class="input windows-username" type="text" placeholder="Username"/>
-									</div>
-								</div>
-							</div>
-							<div class="column">
-								<div class="field">
-									<div class="control">
-										<input class="input windows-password" type="password" placeholder="Password"/>
-									</div>
-								</div>
-							</div>
+					<div class="field">
+						<div class="control">
+							<input class="input edit-host" type="text" placeholder="Hostname or IP address"/>
+							<input class="input edit-host-id" type="hidden"/>
 						</div>
 					</div>
 
 				</section>
 				<footer class="modal-card-foot">
-					<button class="button save-new-host is-success">Save changes</button>
+					<button class="button edit-existing-host is-success">Save changes</button>
 					<button class="button close-modal">Cancel</button>
 				</footer>
 			</div>
@@ -67,9 +67,9 @@
 				</div>
 			</div>
 			<div class="panel-block hostnames">
-				<table class="table is-narrow is-fullwidth">
-					<tr><td><em>Loading ... </em></td></tr>
-				</table>
+				<div class="devices text-center" style="display: block; width: 100%;">
+					<em>Loading ... </em>
+				</div>
 			</div>
 		</div>
 
@@ -95,18 +95,23 @@
 					.attr("class", "tag is-danger is-pulled-right")
 					.text("Disconnected")
 					.unbind();
-				$(".hostnames table").html("");
+				$(".hostnames .devices").html("");
 			});
 
-			socket.on("hostChange", function (data) {
+			socket.on("hostChange", function (hosts) {
+
+				var data = hosts.sort(function (x, y) {
+					return (x.online === y.online)? 0 : x.online? -1 : 1;
+				}).reverse();
+
 				if (!data.length) {
-					$(".hostnames table").html("<tr><td><em>No hosts</em></td></tr>");
+					$(".hostnames .devices").html("<em>No hosts</em>");
 				} else {
-					$(".hostnames table").html("");
+					$(".hostnames .devices").html("");
 
 					for (var i = 0; i < data.length; i++) {
 						var host = data[i];
-						var html = '<tr><td width="70px">';
+						var html = '<div class="text-left" style="background-color: #f1f1f1; width: calc(100% / 3 - 6px); float: left; padding: 10px; border: 1px solid #ccc; border-radius: 3px; margin: 3px;">';
 						if (host.online == undefined) {
 							html += '<span class="tag is-light">Waiting</span>';
 						} else if (host.online) {
@@ -115,12 +120,20 @@
 							if (host.failedTrys > 5) {
 								html += '<span class="tag is-danger">Offline ' + (host.lastOnline?moment(host.lastOnline).fromNow():"") + ' </span>';
 							} else {
-								html += '<span class="tag is-warning">Trying</span>';
+								html += '<span class="tag is-warning">Trying ('+host.failedTrys+')</span>';
 							}
 						}
-						html += '</td><td>' + (host.name || host.hostname) + '</td><td>' + (host.ip || "") + '</td><td width="100px"><a data-id="'+host._id+'">Remove</a></td></tr>';
-						$(".hostnames table").append(html);					
+						html += ' ' + (host.name || host.hostname) + ' (' + (host.ip || "") + ') <a class="pull-right" style="margin-top: 4px" data-id="'+host._id+'"><i class="fa fa-trash"></i></a> <a class="pull-right" style="margin-top: 5px; margin-right: 5px;" data-name="'+host.name+'" data-hostname="'+host.hostname+'" data-edit="'+host._id+'"><i class="fa fa-edit"></i></a></div>';
+
+						$(".hostnames .devices").append(html);					
 					}
+
+					$("[data-edit]").bind("click", function(e) {
+						$(".edit-host-modal").fadeIn(100);
+						$(".edit-host-display-name").val($(this).attr("data-name"));
+						$(".edit-host").val($(this).attr("data-hostname"));
+						$(".edit-host-id").val($(this).attr("data-edit"));
+					});
 
 					$("[data-id]").bind("click", function(e) {
 						var r = confirm("Click OK if you want to delete this host");
@@ -137,6 +150,17 @@
 
 			$(".close-modal").bind("click", function () {
 				$(".new-host-modal").fadeOut(100);
+				$(".edit-host-modal").fadeOut(100);
+			});
+
+			$(".edit-existing-host").bind("click", function(e) {
+				socket.emit("editHost", {
+					name: $(".edit-host-display-name").val(), 
+					hostname: $(".edit-host").val(), 
+					id: $(".edit-host-id").val()
+				});
+				$(".close-modal").eq(0).click();
+				$(".windows-username, .windows-password, .new-host, .new-host-display-name").val("");
 			});
 
 			$(".save-new-host").bind("click", function(e) {

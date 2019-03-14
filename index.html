@@ -61,7 +61,7 @@
 
 		<div class="panel">
 			<div class="panel-heading">
-				Hosts
+				Offline Hosts
 				<div class="tag is-info is-pulled-right">
 					Starting up...
 				</div>
@@ -83,11 +83,8 @@
 
 			socket.on("connect", function () {
 				$(".panel-heading .tag")
-					.attr("class", "tag is-link is-pulled-right")
-					.text("Add a new host")
-					.bind("click", function () {
-						$(".new-host-modal").fadeIn(100);
-					});
+					.attr("class", "tag is-success is-pulled-right")
+					.text("Connected");
 			});
 
 			socket.on("disconnect", function () {
