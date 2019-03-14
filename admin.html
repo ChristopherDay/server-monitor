@@ -100,7 +100,9 @@
 
 			socket.on("hostChange", function (hosts) {
 
-				var data = hosts.sort(function (x, y) {
+				var data = hosts.sort(function (a, b) {
+					return b.name.localeCompare(a.name, undefined, {numeric: true, sensitivity: 'base'});
+				}).sort(function (x, y) {
 					return (x.online === y.online)? 0 : x.online? -1 : 1;
 				}).reverse();
 
